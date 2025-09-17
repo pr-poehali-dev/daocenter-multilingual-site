@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Icon from '@/components/ui/icon';
 
 const translations = {
@@ -34,7 +37,16 @@ const translations = {
     burned: "Сожжено",
     joinCommunity: "Присоединиться к сообществу",
     readDocs: "Читать документацию",
-    language: "Язык"
+    language: "Язык",
+    viewDetails: "Подробнее",
+    proposalDetails: "Детали предложения",
+    votingEnds: "Голосование завершается",
+    totalVotes: "Всего голосов",
+    votingPower: "Сила голоса",
+    discussion: "Обсуждение",
+    voteFor: "За",
+    voteAgainst: "Против",
+    close: "Закрыть"
   },
   en: {
     title: "CENTER DAO",
@@ -62,7 +74,16 @@ const translations = {
     burned: "Burned",
     joinCommunity: "Join Community",
     readDocs: "Read Documentation",
-    language: "Language"
+    language: "Language",
+    viewDetails: "View Details",
+    proposalDetails: "Proposal Details",
+    votingEnds: "Voting ends",
+    totalVotes: "Total votes",
+    votingPower: "Voting power",
+    discussion: "Discussion",
+    voteFor: "For",
+    voteAgainst: "Against",
+    close: "Close"
   },
   es: {
     title: "CENTER DAO",
@@ -306,6 +327,7 @@ const languageNames = {
 export default function Index() {
   const [currentLang, setCurrentLang] = useState<keyof typeof translations>('ru');
   const [votedProposals, setVotedProposals] = useState<Set<number>>(new Set());
+  const [selectedProposal, setSelectedProposal] = useState<number | null>(null);
   
   const t = translations[currentLang];
 
@@ -318,22 +340,49 @@ export default function Index() {
       id: 1,
       title: t.proposalTitle1,
       description: t.proposalDesc1,
+      fullDescription: "This comprehensive proposal aims to allocate 1,000,000 CENTER tokens to fund the development of innovative DeFi protocols within our ecosystem. The allocation will support research and development of yield farming protocols, automated market makers, and lending platforms that integrate seamlessly with CENTER DAO's governance framework. Expected timeline: 6 months with quarterly progress reviews.",
       votes: 75,
-      status: "active"
+      totalVotes: 2500000,
+      votingEnds: "2024-01-15",
+      status: "active",
+      proposer: "0x742d...3f8a",
+      votingPower: 125000,
+      comments: [
+        { author: "DevCommunity", avatar: "DC", text: "This will revolutionize our DeFi capabilities!", time: "2h ago" },
+        { author: "TokenHolder", avatar: "TH", text: "Strong support for this initiative", time: "5h ago" }
+      ]
     },
     {
       id: 2, 
       title: t.proposalTitle2,
       description: t.proposalDesc2,
+      fullDescription: "Integration proposal for Layer 2 scaling solutions including Polygon, Arbitrum, and Optimism. This partnership will reduce transaction costs by up to 90% while maintaining security and decentralization. The integration includes cross-chain bridge development, liquidity incentives, and governance token migration tools.",
       votes: 60,
-      status: "active"
+      totalVotes: 1800000,
+      votingEnds: "2024-01-20",
+      status: "active",
+      proposer: "0x9a1b...7e2c",
+      votingPower: 98000,
+      comments: [
+        { author: "ScalingExpert", avatar: "SE", text: "Layer 2 is the future of DeFi", time: "1h ago" },
+        { author: "CommunityMod", avatar: "CM", text: "Great technical analysis provided", time: "3h ago" }
+      ]
     },
     {
       id: 3,
       title: t.proposalTitle3,
       description: t.proposalDesc3,
+      fullDescription: "Launch of a comprehensive grant program allocating 500,000 CENTER tokens annually to support developers building on our platform. Grants will range from 5,000 to 50,000 tokens based on project scope and impact. Priority areas include DeFi tools, governance improvements, and community applications.",
       votes: 85,
-      status: "active"
+      totalVotes: 3200000,
+      votingEnds: "2024-01-10",
+      status: "active",
+      proposer: "0x4c7d...9b1f",
+      votingPower: 156000,
+      comments: [
+        { author: "BuilderDAO", avatar: "BD", text: "Essential for ecosystem growth", time: "30m ago" },
+        { author: "InnovateNow", avatar: "IN", text: "Will attract top talent to CENTER", time: "2h ago" }
+      ]
     }
   ];
 
@@ -477,14 +526,146 @@ export default function Index() {
                         <Progress value={proposal.votes} className="h-2" />
                       </div>
                       
-                      <Button 
-                        className="w-full bg-gradient-to-r from-electric-blue to-dao-purple hover:from-blue-600 hover:to-purple-600 text-white"
-                        disabled={votedProposals.has(proposal.id)}
-                        onClick={() => handleVote(proposal.id)}
-                      >
-                        <Icon name="Vote" className="w-4 h-4 mr-2" />
-                        {votedProposals.has(proposal.id) ? "Voted" : t.vote}
-                      </Button>
+                      <div className="space-y-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10">
+                              <Icon name="Eye" className="w-4 h-4 mr-2" />
+                              {t.viewDetails}
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-900 border-white/10 text-white">
+                            <DialogHeader>
+                              <DialogTitle className="text-2xl font-bold text-white">
+                                {proposal.title}
+                              </DialogTitle>
+                              <DialogDescription className="text-gray-300 text-lg">
+                                {t.proposalDetails} #{proposal.id}
+                              </DialogDescription>
+                            </DialogHeader>
+                            
+                            <div className="space-y-6 mt-6">
+                              {/* Proposal Status */}
+                              <div className="flex items-center justify-between">
+                                <Badge variant="outline" className="border-blockchain-green text-blockchain-green">
+                                  {proposal.status}
+                                </Badge>
+                                <div className="text-sm text-gray-400">
+                                  {t.votingEnds}: {proposal.votingEnds}
+                                </div>
+                              </div>
+                              
+                              {/* Full Description */}
+                              <div>
+                                <h3 className="text-lg font-semibold text-white mb-3">Description</h3>
+                                <p className="text-gray-300 leading-relaxed">{proposal.fullDescription}</p>
+                              </div>
+                              
+                              {/* Voting Stats */}
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <Card className="bg-white/5 border-white/10">
+                                  <CardContent className="p-4 text-center">
+                                    <div className="text-2xl font-bold text-blockchain-green">{proposal.votes}%</div>
+                                    <div className="text-sm text-gray-400">Support</div>
+                                  </CardContent>
+                                </Card>
+                                <Card className="bg-white/5 border-white/10">
+                                  <CardContent className="p-4 text-center">
+                                    <div className="text-2xl font-bold text-white">{proposal.totalVotes.toLocaleString()}</div>
+                                    <div className="text-sm text-gray-400">{t.totalVotes}</div>
+                                  </CardContent>
+                                </Card>
+                                <Card className="bg-white/5 border-white/10">
+                                  <CardContent className="p-4 text-center">
+                                    <div className="text-2xl font-bold text-dao-purple">{proposal.votingPower.toLocaleString()}</div>
+                                    <div className="text-sm text-gray-400">{t.votingPower}</div>
+                                  </CardContent>
+                                </Card>
+                              </div>
+                              
+                              {/* Detailed Voting */}
+                              <div>
+                                <h3 className="text-lg font-semibold text-white mb-4">Voting Results</h3>
+                                <div className="space-y-3">
+                                  <div>
+                                    <div className="flex justify-between text-sm text-gray-300 mb-2">
+                                      <span className="flex items-center">
+                                        <Icon name="ThumbsUp" className="w-4 h-4 mr-1 text-blockchain-green" />
+                                        {t.voteFor}
+                                      </span>
+                                      <span>{proposal.votes}% ({Math.round(proposal.totalVotes * proposal.votes / 100).toLocaleString()} votes)</span>
+                                    </div>
+                                    <Progress value={proposal.votes} className="h-3" />
+                                  </div>
+                                  <div>
+                                    <div className="flex justify-between text-sm text-gray-300 mb-2">
+                                      <span className="flex items-center">
+                                        <Icon name="ThumbsDown" className="w-4 h-4 mr-1 text-red-400" />
+                                        {t.voteAgainst}
+                                      </span>
+                                      <span>{100 - proposal.votes}% ({Math.round(proposal.totalVotes * (100 - proposal.votes) / 100).toLocaleString()} votes)</span>
+                                    </div>
+                                    <Progress value={100 - proposal.votes} className="h-3" />
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Discussion */}
+                              <div>
+                                <h3 className="text-lg font-semibold text-white mb-4">{t.discussion}</h3>
+                                <div className="space-y-4">
+                                  {proposal.comments.map((comment, index) => (
+                                    <div key={index} className="flex space-x-3 p-4 bg-white/5 rounded-lg">
+                                      <Avatar className="w-10 h-10">
+                                        <AvatarFallback className="bg-gradient-to-r from-electric-blue to-dao-purple text-white text-sm">
+                                          {comment.avatar}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div className="flex-1">
+                                        <div className="flex items-center space-x-2 mb-1">
+                                          <span className="font-medium text-white">{comment.author}</span>
+                                          <span className="text-xs text-gray-400">{comment.time}</span>
+                                        </div>
+                                        <p className="text-gray-300">{comment.text}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              {/* Voting Actions */}
+                              <Separator className="border-white/10" />
+                              <div className="flex space-x-4">
+                                <Button 
+                                  className="flex-1 bg-gradient-to-r from-blockchain-green to-electric-blue hover:from-green-600 hover:to-blue-600 text-white"
+                                  disabled={votedProposals.has(proposal.id)}
+                                  onClick={() => handleVote(proposal.id)}
+                                >
+                                  <Icon name="ThumbsUp" className="w-4 h-4 mr-2" />
+                                  {t.voteFor}
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  className="flex-1 border-red-400 text-red-400 hover:bg-red-400/10"
+                                  disabled={votedProposals.has(proposal.id)}
+                                >
+                                  <Icon name="ThumbsDown" className="w-4 h-4 mr-2" />
+                                  {t.voteAgainst}
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                        
+                        <Button 
+                          className="w-full bg-gradient-to-r from-electric-blue to-dao-purple hover:from-blue-600 hover:to-purple-600 text-white"
+                          disabled={votedProposals.has(proposal.id)}
+                          onClick={() => handleVote(proposal.id)}
+                        >
+                          <Icon name="Vote" className="w-4 h-4 mr-2" />
+                          {votedProposals.has(proposal.id) ? "Voted" : t.vote}
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
